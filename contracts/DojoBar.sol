@@ -25,7 +25,7 @@ contract DojoBar is ERC20("DojoBar", "xDOJO") {
      */
     function enter(uint256 amount) public returns (uint256 what) {
         //only allow EOA to enter
-        require(msg.sender == tx.origin);
+        require(msg.sender == tx.origin, "EOA only");
         // Gets the amount of Dojo locked in the contract
         uint256 totalDojo = dojo.balanceOf(address(this));
         // Gets the amount of xDojo in existence
@@ -59,6 +59,9 @@ contract DojoBar is ERC20("DojoBar", "xDOJO") {
      * Get the current ratio of Dojo:xDojo
      */
     function getRatio() public view returns (uint256) {
+        if (totalSupply() == 0 || dojo.balanceOf(address(this)) == 0){
+            return 1;
+        }
         return dojo.balanceOf(address(this)) / totalSupply();
     }
 

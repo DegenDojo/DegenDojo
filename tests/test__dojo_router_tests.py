@@ -20,6 +20,7 @@ def test_trade_tokens_for_eth():
     WETH = config["networks"][network.show_active()]["weth"]
     dojo_house = DojoHouse[-1]
     dojo_router = DojoRouter[-1]
+
     dojo_token = DegenDojo[-1]
     # make sure enough liquidity in house
     if dojo_house.balance() < LIQUIDITY_AMOUNT:
