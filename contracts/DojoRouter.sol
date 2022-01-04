@@ -6,7 +6,6 @@ pragma solidity ^0.8.0;
 import "./libraries/PancakeLibrary.sol";
 import "./libraries/TransferHelper.sol";
 import "./interfaces/IWETH.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./DegenDojo.sol";
 
 contract DojoRouter {

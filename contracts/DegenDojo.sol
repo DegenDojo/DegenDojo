@@ -5,7 +5,6 @@ pragma solidity ^0.8.0;
 import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
 import "@chainlink/contracts/src/v0.8/VRFConsumerBase.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./DojoHouse.sol";
 
 contract DegenDojo is ERC20, VRFConsumerBase, Ownable {
@@ -285,9 +284,10 @@ contract DegenDojo is ERC20, VRFConsumerBase, Ownable {
      * Initiate change in the house contract
      */
     function initiateSetHouse(address _house) public onlyOwner {
-        //hosue can only be updated after 28,800 blocks (~3 days on BSC)
+        //hosue can only be updated after 28,800 blocks (~1 day assuming 3s block)
         //NEED TO CHANGE CODE FOR TIME LOCK
         uint256 resetTime = block.number + 0;
+        //uint256 resetTime = block.number + 28,800; <CHANGE POST TEST>
         nextHouse = newHouse(resetTime, _house);
     }
 

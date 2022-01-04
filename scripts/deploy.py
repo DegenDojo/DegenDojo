@@ -73,7 +73,7 @@ def set_house(dojo_token, dojo_house):
 
 def update_front_end():
     # build folder
-    copy_folders_to_front_end("./build", "./front_end/src/chain-info")
+    copy_folders_to_front_end("./build", "../Dojo_Front_End/src/chain-info")
     with open("brownie-config.yaml", "r") as brownie_config:
         config_dict = yaml.load(brownie_config, Loader=yaml.FullLoader)
         with open("./front_end/src/brownie-config.json", "w") as brownie_config_json:

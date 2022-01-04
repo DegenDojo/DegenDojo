@@ -59,7 +59,7 @@ contract DojoBar is ERC20("DojoBar", "xDOJO") {
      * Get the current ratio of Dojo:xDojo
      */
     function getRatio() public view returns (uint256) {
-        if (totalSupply() == 0 || dojo.balanceOf(address(this)) == 0){
+        if (totalSupply() == 0 || dojo.balanceOf(address(this)) == 0) {
             return 1;
         }
         return dojo.balanceOf(address(this)) / totalSupply();
