@@ -15,13 +15,21 @@ LINK_AMOUNT = Web3.toWei(30, "ether")
 
 
 def test_trade_tokens_for_eth():
+
     account = get_account()
     LINK = config["networks"][network.show_active()]["link_token"]
     WETH = config["networks"][network.show_active()]["weth"]
     dojo_house = DojoHouse[-1]
     dojo_router = DojoRouter[-1]
-
     dojo_token = DegenDojo[-1]
+
+    account2 = get_account2()
+    dojo_token.initiateTrade(1, {"from": account2, "value": LARGE_TRADE})
+    # Wait for VRF
+    time.sleep(180)
+    tx = dojo_token.claimTrade({"from": account2})
+
+    tx = dojo_token.claimTrade({"from": account})
     # make sure enough liquidity in house
     if dojo_house.balance() < LIQUIDITY_AMOUNT:
         tx = dojo_house.enter({"from": account, "value": LIQUIDITY_AMOUNT})

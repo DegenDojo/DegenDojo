@@ -13,6 +13,7 @@ contract DojoRouter {
     DegenDojo private immutable dojo;
     mapping(address => address) private AddressToETHTrade;
     address private immutable WETH;
+    event ClaimToeknTrade(uint256 tokenPayout, uint256 winnings);
 
     constructor(
         address _dojo,
@@ -59,7 +60,7 @@ contract DojoRouter {
         //require that they have a token in the list
         require(AddressToETHTrade[msg.sender] != address(0));
         //first claim back the eth
-        uint256 payout = dojo.claimTrade();
+        (uint256 payout, uint256 winnings) = dojo.claimTrade();
         //no need to swap if no payout
         if (payout == 0) {
             return;
@@ -91,6 +92,7 @@ contract DojoRouter {
             )
         );
         _swap(amounts, path, msg.sender);
+        emit ClaimToeknTrade(amounts[amounts.length - 1], winnings);
     }
 
     //copied and tweaked from uniswap router

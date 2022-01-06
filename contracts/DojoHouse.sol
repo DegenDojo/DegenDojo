@@ -190,6 +190,9 @@ contract DojoHouse is ERC20("DojoLiquidity", "DLP") {
             //set payout to win if greater than breakpoint
             payout = (multiplier * msg.value) / 100;
         }
+        if (payout != 0) {
+            _to.transfer(payout);
+        }
         //update total volume
         totalVolume += msg.value;
         return payout;

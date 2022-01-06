@@ -44,6 +44,7 @@ contract DegenDojo is ERC20, VRFConsumerBase, Ownable {
     //events
     event RequestedRandomness(bytes32 requestId);
     event ReceivedRandomness(bytes32 requestId);
+    event ClaimTrade(uint256 payout, uint256 winnings);
 
     /**
      * Constructor
@@ -213,7 +214,7 @@ contract DegenDojo is ERC20, VRFConsumerBase, Ownable {
     /**
      * Claim the payout from a trade
      */
-    function claimTrade() external returns (uint256) {
+    function claimTrade() external returns (uint256, uint256) {
         //requires that the caller has a requestID
         require(
             AddressToPendingTrade[address(tx.origin)]._requestID != 0,
@@ -235,7 +236,7 @@ contract DegenDojo is ERC20, VRFConsumerBase, Ownable {
         //get their random number
         uint256 random = requestToRandom[requestID];
         //spin the dojo token jackpot
-        _spinJackpot(random, size, address(tx.origin));
+        uint256 winnings = _spinJackpot(random, size, address(tx.origin));
         //claim payout from House
         //if spin trade
         uint256 payout;
@@ -255,7 +256,8 @@ contract DegenDojo is ERC20, VRFConsumerBase, Ownable {
         }
         //remove the pending trade
         delete AddressToPendingTrade[address(tx.origin)];
-        return payout;
+        emit ClaimTrade(payout, winnings);
+        return (payout, winnings);
     }
 
     /**
@@ -373,7 +375,7 @@ contract DegenDojo is ERC20, VRFConsumerBase, Ownable {
         uint256 _random,
         uint256 _size,
         address _player
-    ) private {
+    ) private returns (uint256) {
         uint256 winnings = 0;
         uint256 splitRandom;
         //iterate over each jackpot (not including jackpot[8])
@@ -400,5 +402,7 @@ contract DegenDojo is ERC20, VRFConsumerBase, Ownable {
         }
         //update the recent winner
         winners[1] = Winner(tx.origin, winnings);
+
+        return winnings;
     }
 }
