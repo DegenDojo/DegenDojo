@@ -11,9 +11,12 @@ import "./DegenDojo.sol";
 contract DojoRouter {
     address public immutable factory;
     DegenDojo private immutable dojo;
-    mapping(address => address) private AddressToETHTrade;
     address private immutable WETH;
-    event ClaimToeknTrade(uint256 tokenPayout, uint256 winnings);
+    event ClaimTokenTrade(
+        uint256 tokenPayout,
+        uint256 winnings,
+        uint256 remainder
+    );
 
     constructor(
         address _dojo,
@@ -37,14 +40,12 @@ contract DojoRouter {
      * Inititaes a trade to swap ETH for a given amount of tokens
      * Uses uniswapV2 router for the trades
      */
-    function swapETHforTokens(uint8 belt, address tokenOut) external payable {
+    function swapETHforTokens(uint8 belt) external payable {
         if (msg.value > dojo.getMinimumTradeSize()) {
             dojo.initiateTrade{value: msg.value}(belt);
         } else {
             dojo.initiateSmallTrade{value: msg.value}(belt);
         }
-        //add the trade pending to the mapping
-        AddressToETHTrade[address(msg.sender)] = tokenOut;
     }
 
     /**
@@ -53,21 +54,21 @@ contract DojoRouter {
      * NOTE: minOut input if for 1 BNB. Trade size is unknown, so we do slippage check on a 1 BNB trade
      * If slippage too high, sender can always simply claim back ETH instead from DegenDojo
      */
-    function claimETHTrade(uint256 minOut, uint256 deadline)
-        external
-        ensure(deadline)
-    {
-        //require that they have a token in the list
-        require(AddressToETHTrade[msg.sender] != address(0));
+    function claimETHTrade(
+        uint256 minOut,
+        uint256 deadline,
+        address tokenOut
+    ) external ensure(deadline) {
         //first claim back the eth
-        (uint256 payout, uint256 winnings) = dojo.claimTrade();
+        (uint256 payout, uint256 winnings, uint256 remainder) = dojo
+            .claimTrade();
         //no need to swap if no payout
         if (payout == 0) {
             return;
         }
         address[] memory path = new address[](2);
         path[0] = WETH;
-        path[1] = AddressToETHTrade[msg.sender];
+        path[1] = tokenOut;
         //Slippage check first
         uint256[] memory slippageAmounts = PancakeLibrary.getAmountsOut(
             factory,
@@ -92,7 +93,7 @@ contract DojoRouter {
             )
         );
         _swap(amounts, path, msg.sender);
-        emit ClaimToeknTrade(amounts[amounts.length - 1], winnings);
+        emit ClaimTokenTrade(amounts[amounts.length - 1], winnings, remainder);
     }
 
     //copied and tweaked from uniswap router

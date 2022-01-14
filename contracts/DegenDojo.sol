@@ -19,6 +19,7 @@ contract DegenDojo is ERC20, VRFConsumerBase, Ownable {
     uint256[] public jackpotPast;
     uint256 public rewardsPerBlock;
     uint256 private startBlock;
+    uint256 public bounty;
     struct PendingTrade {
         bytes32 _requestID;
         uint256 _amount;
@@ -27,14 +28,12 @@ contract DegenDojo is ERC20, VRFConsumerBase, Ownable {
     mapping(bytes32 => uint256) private requestToRandom;
     mapping(address => PendingTrade) private AddressToPendingTrade;
     address[] private smallTrades;
-
     //used as timelock for changing house contract
     struct newHouse {
         uint256 changeBlock;
         address newHouse;
     }
     newHouse public nextHouse;
-
     //simple getter for winners list where [0] = biggest winner, [1] = most recent win
     struct Winner {
         address winner;
@@ -43,8 +42,7 @@ contract DegenDojo is ERC20, VRFConsumerBase, Ownable {
     Winner[2] public winners;
     //events
     event RequestedRandomness(bytes32 requestId);
-    event ReceivedRandomness(bytes32 requestId);
-    event ClaimTrade(uint256 payout, uint256 winnings);
+    event ClaimTrade(uint256 payout, uint256 winnings, uint256 remainder);
 
     /**
      * Constructor
@@ -148,7 +146,7 @@ contract DegenDojo is ERC20, VRFConsumerBase, Ownable {
         );
         //ensure that they do not have a pending trade (SMALL OR BIG)
         require(
-            AddressToPendingTrade[address(tx.origin)]._requestID == 0,
+            AddressToPendingTrade[address(tx.origin)]._amount == 0,
             "You already have a trade in progress"
         );
         //add their trade to mapping
@@ -156,9 +154,19 @@ contract DegenDojo is ERC20, VRFConsumerBase, Ownable {
         //add their pending trade to mapping of addresses (use tx.origin incase called by external router)
         AddressToPendingTrade[address(tx.origin)] = PendingTrade(
             newRequest,
-            msg.value,
+            //add the bounty to their trade size
+            msg.value + bounty,
             _belt
         );
+        //reset the bounty
+        bounty = 0;
+        //iterate over each of the small trades, and update the request ID
+        for (uint8 i = 0; i < smallTrades.length; i++) {
+            AddressToPendingTrade[smallTrades[i]]._requestID = newRequest;
+        }
+        //delete the small trade wait list
+        smallTrades = new address[](0);
+
         emit RequestedRandomness(newRequest);
     }
 
@@ -168,7 +176,7 @@ contract DegenDojo is ERC20, VRFConsumerBase, Ownable {
     function initiateSmallTrade(uint8 _belt) external payable {
         //require that they dont have a regular trade
         require(
-            AddressToPendingTrade[address(tx.origin)]._requestID == 0,
+            AddressToPendingTrade[address(tx.origin)]._amount == 0,
             "You already have a trade in progress"
         );
         //require that the trade size doens't exceed maximum
@@ -179,17 +187,18 @@ contract DegenDojo is ERC20, VRFConsumerBase, Ownable {
         smallTrades.push(tx.origin);
         //add their address to pendingTrade with inital value to be "small trade"
         AddressToPendingTrade[address(tx.origin)] = PendingTrade(
-            bytes32("smallTrade"),
-            msg.value,
+            bytes32(""),
+            (msg.value * 49) / 50,
             _belt
         );
+        bounty += msg.value / 50;
     }
 
     /**
      * Checks if the user has a current trade pending
      */
     function checkPendingTrade(address _address) external view returns (bool) {
-        if (AddressToPendingTrade[_address]._requestID != 0) {
+        if (AddressToPendingTrade[_address]._amount != 0) {
             return true;
         } else {
             return false;
@@ -214,10 +223,17 @@ contract DegenDojo is ERC20, VRFConsumerBase, Ownable {
     /**
      * Claim the payout from a trade
      */
-    function claimTrade() external returns (uint256, uint256) {
+    function claimTrade()
+        external
+        returns (
+            uint256,
+            uint256,
+            uint256
+        )
+    {
         //requires that the caller has a requestID
         require(
-            AddressToPendingTrade[address(tx.origin)]._requestID != 0,
+            AddressToPendingTrade[address(tx.origin)]._amount != 0,
             "You have no trade in progress"
         );
         //require there is enough money in pool to pay out at least 10x
@@ -230,7 +246,10 @@ contract DegenDojo is ERC20, VRFConsumerBase, Ownable {
         bytes32 requestID = AddressToPendingTrade[address(tx.origin)]
             ._requestID;
         //require their requestID to have a random number != 0
-        require(requestToRandom[requestID] != 0);
+        require(
+            requestToRandom[requestID] != 0,
+            "Your request ID has not been fulfilled yet"
+        );
         uint256 size = AddressToPendingTrade[address(tx.origin)]._amount;
         uint8 belt = AddressToPendingTrade[address(tx.origin)]._level;
         //get their random number
@@ -239,16 +258,17 @@ contract DegenDojo is ERC20, VRFConsumerBase, Ownable {
         uint256 winnings = _spinJackpot(random, size, address(tx.origin));
         //claim payout from House
         //if spin trade
-        uint256 payout;
+        uint256 payout = 0;
+        uint256 remainder;
         if (belt <= 3) {
-            payout = house.spinTrade{value: size}(
+            (payout, remainder) = house.spinTrade{value: size}(
                 belt,
                 random,
                 //uses msg.sender here as it pays to router not origin
                 payable(address(msg.sender))
             );
         } else {
-            payout = house.allOrNothingTrade{value: size}(
+            (payout, remainder) = house.allOrNothingTrade{value: size}(
                 belt,
                 random,
                 payable(address(msg.sender))
@@ -256,8 +276,8 @@ contract DegenDojo is ERC20, VRFConsumerBase, Ownable {
         }
         //remove the pending trade
         delete AddressToPendingTrade[address(tx.origin)];
-        emit ClaimTrade(payout, winnings);
-        return (payout, winnings);
+        emit ClaimTrade(payout, winnings, remainder);
+        return (payout, winnings, remainder);
     }
 
     /**
@@ -267,19 +287,8 @@ contract DegenDojo is ERC20, VRFConsumerBase, Ownable {
         internal
         override
     {
-        //iterate over each of the small trades, and update the request ID
-        for (uint8 i = 0; i < smallTrades.length; i++) {
-            AddressToPendingTrade[smallTrades[i]] = PendingTrade(
-                _requestId,
-                AddressToPendingTrade[smallTrades[i]]._amount,
-                AddressToPendingTrade[smallTrades[i]]._level
-            );
-        }
-        //delete the small trade wait list
-        smallTrades = new address[](0);
         //set the random number to the request
         requestToRandom[_requestId] = _randomness;
-        emit RequestedRandomness(_requestId);
     }
 
     /**
@@ -401,8 +410,9 @@ contract DegenDojo is ERC20, VRFConsumerBase, Ownable {
             winners[0] = Winner(tx.origin, winnings);
         }
         //update the recent winner
-        winners[1] = Winner(tx.origin, winnings);
-
+        if (winnings > 0) {
+            winners[1] = Winner(tx.origin, winnings);
+        }
         return winnings;
     }
 }

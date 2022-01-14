@@ -77,7 +77,7 @@ contract DojoHouse is ERC20("DojoLiquidity", "DLP") {
         uint8 _belt,
         uint256 _random,
         address payable _to
-    ) external payable returns (uint256) {
+    ) external payable returns (uint256, uint256) {
         //function only to be called by DegenDojo
         require(address(msg.sender) == dojo, "DOJO only");
         //the base rate if lose
@@ -146,7 +146,7 @@ contract DojoHouse is ERC20("DojoLiquidity", "DLP") {
         //update total volume
         totalVolume += msg.value;
         //return payout
-        return payout;
+        return (payout, remainder);
     }
 
     /**
@@ -161,7 +161,7 @@ contract DojoHouse is ERC20("DojoLiquidity", "DLP") {
         uint8 _belt,
         uint256 _random,
         address payable _to
-    ) external payable returns (uint256) {
+    ) external payable returns (uint256, uint256) {
         //function only to be called by DegenDojo
         require(msg.sender == dojo, "DOJO Only");
         //initiate breakpoints to white belt
@@ -195,7 +195,7 @@ contract DojoHouse is ERC20("DojoLiquidity", "DLP") {
         }
         //update total volume
         totalVolume += msg.value;
-        return payout;
+        return (payout, remainder);
     }
 
     /**
