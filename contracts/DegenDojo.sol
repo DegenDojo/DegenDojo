@@ -166,7 +166,6 @@ contract DegenDojo is ERC20, VRFConsumerBase, Ownable {
         }
         //delete the small trade wait list
         smallTrades = new address[](0);
-
         emit RequestedRandomness(newRequest);
     }
 
@@ -183,6 +182,8 @@ contract DegenDojo is ERC20, VRFConsumerBase, Ownable {
         require(msg.value < getMaximumTradeSize(), "Insufficent House Balance");
         //only a maximum of 50 small trades at a time to ensure gas limits by VRF
         require(smallTrades.length <= 50, "Small trade waitlist current full");
+        //make sure its a non-zero trade
+        require(msg.value > 0);
         //add their address to the small trades
         smallTrades.push(tx.origin);
         //add their address to pendingTrade with inital value to be "small trade"
