@@ -52,7 +52,6 @@ contract DegenDojo is ERC20, VRFConsumerBase, Ownable {
         address _LINKpriceFeedAddress,
         address _vrfCoordinator,
         address _link,
-        //address _factory,
         uint256 _fee,
         bytes32 _keyhash,
         uint256 initialSupply,
@@ -382,6 +381,7 @@ contract DegenDojo is ERC20, VRFConsumerBase, Ownable {
      */
     function claim() external onlyOwner {
         _mint(owner(), viewJackpots(8));
+        jackpotPaid[8] += viewJackpots(8);
     }
 
     /**
