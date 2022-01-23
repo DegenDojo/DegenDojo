@@ -40,7 +40,7 @@ contract DojoRouter {
      * Inititaes a trade to swap ETH for a given amount of tokens
      * Uses uniswapV2 router for the trades
      */
-    function swapETHforTokens(uint8 belt) external payable {
+    function swapETHforTokens(uint256 belt) external payable {
         if (msg.value > dojo.getMinimumTradeSize()) {
             dojo.initiateTrade{value: msg.value}(belt);
         } else {
@@ -100,7 +100,7 @@ contract DojoRouter {
     function swapTokensForETH(
         uint256 amountIn,
         address tokenIn,
-        uint8 belt,
+        uint256 belt,
         uint256 minOut,
         uint256 deadline
     ) external ensure(deadline) {

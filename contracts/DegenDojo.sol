@@ -23,7 +23,7 @@ contract DegenDojo is ERC20, VRFConsumerBase, Ownable {
     struct PendingTrade {
         bytes32 _requestID;
         uint256 _amount;
-        uint8 _level;
+        uint256 _level;
     }
     mapping(bytes32 => uint256) private requestToRandom;
     mapping(address => PendingTrade) private AddressToPendingTrade;
@@ -131,7 +131,7 @@ contract DegenDojo is ERC20, VRFConsumerBase, Ownable {
      * FOR ALL OR NOTHING TRADE:
      * 4 = whitebelt, 5 = blue belt, 6 = black belt
      */
-    function initiateTrade(uint8 _belt) external payable {
+    function initiateTrade(uint256 _belt) external payable {
         //ensure trade is between minimum and maximum
         require(
             msg.value > getMinimumTradeSize() &&
@@ -160,7 +160,7 @@ contract DegenDojo is ERC20, VRFConsumerBase, Ownable {
         //reset the bounty
         bounty = 0;
         //iterate over each of the small trades, and update the request ID
-        for (uint8 i = 0; i < smallTrades.length; i++) {
+        for (uint256 i = 0; i < smallTrades.length; i++) {
             AddressToPendingTrade[smallTrades[i]]._requestID = newRequest;
         }
         //delete the small trade wait list
@@ -171,7 +171,7 @@ contract DegenDojo is ERC20, VRFConsumerBase, Ownable {
     /**
      * Initiates a trade smaller than the minimum trade size
      */
-    function initiateSmallTrade(uint8 _belt) external payable {
+    function initiateSmallTrade(uint256 _belt) external payable {
         //require that they dont have a regular trade
         require(
             AddressToPendingTrade[address(tx.origin)]._amount == 0,
@@ -251,7 +251,7 @@ contract DegenDojo is ERC20, VRFConsumerBase, Ownable {
             "Your request ID has not been fulfilled yet"
         );
         uint256 size = AddressToPendingTrade[address(tx.origin)]._amount;
-        uint8 belt = AddressToPendingTrade[address(tx.origin)]._level;
+        uint256 belt = AddressToPendingTrade[address(tx.origin)]._level;
         //get their random number
         uint256 random = requestToRandom[requestID];
         //spin the dojo token jackpot
@@ -329,7 +329,7 @@ contract DegenDojo is ERC20, VRFConsumerBase, Ownable {
      * View the current size of given jackpot number
      */
     function viewJackpots(
-        uint8 number /// @title A title that should describe the contract/interface
+        uint256 number /// @title A title that should describe the contract/interface
     ) public view returns (uint256 size) {
         //Get the total possible mint for given jackpot
         uint256 total = ((block.number - startBlock) *
@@ -353,7 +353,7 @@ contract DegenDojo is ERC20, VRFConsumerBase, Ownable {
             "new rate must be lower than previous"
         );
         //add each current jackpot to jackpot past
-        for (uint8 i = 0; i < 9; i++) {
+        for (uint256 i = 0; i < 9; i++) {
             jackpotPast[i] += viewJackpots(i);
         }
         //reset the start time
@@ -365,7 +365,7 @@ contract DegenDojo is ERC20, VRFConsumerBase, Ownable {
     /**
      * Getter function for current pending trade levell
      */
-    function getPendingLevel(address user) public view returns (uint8) {
+    function getPendingLevel(address user) public view returns (uint256) {
         return AddressToPendingTrade[user]._level;
     }
 
@@ -403,7 +403,7 @@ contract DegenDojo is ERC20, VRFConsumerBase, Ownable {
         uint256 winnings = 0;
         uint256 splitRandom;
         //iterate over each jackpot (not including jackpot[8])
-        for (uint8 i = 0; i < 8; i++) {
+        for (uint256 i = 0; i < 8; i++) {
             //rehash to split random number
             splitRandom = uint256(keccak256(abi.encode(_random, i)));
             //get the odd of hitting, capped at 1 in 2

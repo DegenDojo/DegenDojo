@@ -76,7 +76,7 @@ contract DojoHouse is ERC20("DojoLiquidity", "DLP") {
      *  -1% fee given to DojoBar
      */
     function spinTrade(
-        uint8 _belt,
+        uint256 _belt,
         uint256 _random,
         address payable _to
     ) external payable returns (uint256, uint256) {
@@ -162,7 +162,7 @@ contract DojoHouse is ERC20("DojoLiquidity", "DLP") {
      *  -1% fee given to DojoBar
      */
     function allOrNothingTrade(
-        uint8 _belt,
+        uint256 _belt,
         uint256 _random,
         address payable _to
     ) external payable returns (uint256, uint256) {
