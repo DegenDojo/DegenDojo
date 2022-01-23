@@ -180,9 +180,9 @@ contract DegenDojo is ERC20, VRFConsumerBase, Ownable {
         //require that the trade size doens't exceed maximum
         require(msg.value < getMaximumTradeSize(), "Insufficent House Balance");
         //only a maximum of 50 small trades at a time to ensure gas limits by VRF
-        require(smallTrades.length <= 50, "Small trade waitlist current full");
+        require(smallTrades.length < 50, "Small trade waitlist current full");
         //make sure its a non-zero trade
-        require(msg.value > 0);
+        require(msg.value > 10**15);
         //add their address to the small trades
         smallTrades.push(tx.origin);
         //add their address to pendingTrade with inital value to be "small trade"
