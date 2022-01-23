@@ -13,6 +13,7 @@ contract DojoHouse is ERC20("DojoLiquidity", "DLP") {
     address public immutable dojo;
     address payable private treasury;
     uint256 public totalVolume;
+    uint256 private tradeNonce;
 
     constructor(
         address payable _bar,
@@ -22,6 +23,7 @@ contract DojoHouse is ERC20("DojoLiquidity", "DLP") {
         bar = _bar;
         dojo = _dojo;
         treasury = _treasury;
+        tradeNonce = 0;
     }
 
     /**
@@ -113,10 +115,12 @@ contract DojoHouse is ERC20("DojoLiquidity", "DLP") {
             multiplier3 = 800;
             multiplier4 = 1000;
         }
-        //rehash the random number. hashed to static variable so can not change
+        //rehash the random number. hashed to tradeNonce
         uint256 rehashRandom = uint256(
-            keccak256(abi.encode(_random, msg.value))
+            keccak256(abi.encode(_random, tradeNonce))
         );
+        //increment tradeNonse
+        tradeNonce++;
         uint256 remainder = rehashRandom % 100;
         //first set the payout to amount if loss
         uint256 payout = ((base * msg.value) / 100);
@@ -182,8 +186,10 @@ contract DojoHouse is ERC20("DojoLiquidity", "DLP") {
         uint256 payout = 0;
         //rehash the random number
         uint256 rehashRandom = uint256(
-            keccak256(abi.encode(_random, msg.value))
+            keccak256(abi.encode(_random, tradeNonce))
         );
+        //increment tradeNonce
+        tradeNonce++;
         //get the remainder
         uint256 remainder = rehashRandom % 100;
         if (remainder >= breakpoint) {
