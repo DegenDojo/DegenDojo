@@ -364,6 +364,20 @@ contract DegenDojo is ERC20, VRFConsumerBase, Ownable {
     }
 
     /**
+     * Getter function for current pending trade levell
+     */
+    function getPendingLevel(address user) public view returns (uint8) {
+        return AddressToPendingTrade[user]._level;
+    }
+
+    /**
+     * Getter function for current pending trade amount
+     */
+    function getPendingAmount(address user) public view returns (uint256) {
+        return AddressToPendingTrade[user]._amount;
+    }
+
+    /**
      * Only owner to claim founder treasury tokens
      */
     function claim() external onlyOwner {
