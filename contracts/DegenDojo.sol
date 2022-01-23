@@ -8,26 +8,26 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "./DojoHouse.sol";
 
 contract DegenDojo is ERC20, VRFConsumerBase, Ownable {
-    AggregatorV3Interface internal ethUsdPriceFeed;
-    AggregatorV3Interface internal linkUsdPriceFeed;
+    AggregatorV3Interface public ethUsdPriceFeed;
+    AggregatorV3Interface public linkUsdPriceFeed;
     DojoHouse public house;
-    uint256 private fee;
-    bytes32 private keyhash;
+    uint256 public fee;
+    bytes32 public keyhash;
     uint256[] public jackpotPaid;
     uint256[] public jackpotWeight;
     uint256[] public jackpotOdds;
     uint256[] public jackpotPast;
     uint256 public rewardsPerBlock;
-    uint256 private startBlock;
+    uint256 public startBlock;
     uint256 public bounty;
     struct PendingTrade {
         bytes32 _requestID;
         uint256 _amount;
         uint256 _level;
     }
-    mapping(bytes32 => uint256) private requestToRandom;
+    mapping(bytes32 => uint256) public requestToRandom;
     mapping(address => PendingTrade) private AddressToPendingTrade;
-    address[] private smallTrades;
+    address[] public smallTrades;
     //used as timelock for changing house contract
     struct newHouse {
         uint256 changeBlock;
@@ -48,8 +48,8 @@ contract DegenDojo is ERC20, VRFConsumerBase, Ownable {
      * Constructor
      */
     constructor(
-        address _ETHpriceFeedAddress,
-        address _LINKpriceFeedAddress,
+        AggregatorV3Interface _ETHpriceFeedAddress,
+        AggregatorV3Interface _LINKpriceFeedAddress,
         address _vrfCoordinator,
         address _link,
         uint256 _fee,
@@ -62,8 +62,8 @@ contract DegenDojo is ERC20, VRFConsumerBase, Ownable {
         ERC20("DegenDojo", "DOJO")
     {
         require(ERC20(_link).decimals() == 18);
-        ethUsdPriceFeed = AggregatorV3Interface(_ETHpriceFeedAddress);
-        linkUsdPriceFeed = AggregatorV3Interface(_LINKpriceFeedAddress);
+        ethUsdPriceFeed = _ETHpriceFeedAddress;
+        linkUsdPriceFeed = _LINKpriceFeedAddress;
         fee = _fee;
         keyhash = _keyhash;
         //initial mint will be used to supply liquidity to DEX
@@ -129,7 +129,7 @@ contract DegenDojo is ERC20, VRFConsumerBase, Ownable {
     }
 
     /**
-     * Initiates a trade with weth to the DojoHouse
+     * Initiates a trade with eth to the DojoHouse
      * User passes in a "belt" for the odds of their trade
      * FOR SPIN TRADE:
      * 1 = whitebelt, 2 = blue belt, 3 = black belt
@@ -203,11 +203,7 @@ contract DegenDojo is ERC20, VRFConsumerBase, Ownable {
      * Checks if the user has a current trade pending
      */
     function checkPendingTrade(address _address) external view returns (bool) {
-        if (AddressToPendingTrade[_address]._amount != 0) {
-            return true;
-        } else {
-            return false;
-        }
+        return AddressToPendingTrade[_address]._amount != 0;
     }
 
     /**
@@ -333,9 +329,7 @@ contract DegenDojo is ERC20, VRFConsumerBase, Ownable {
     /**
      * View the current size of given jackpot number
      */
-    function viewJackpots(
-        uint256 number /// @title A title that should describe the contract/interface
-    ) public view returns (uint256 size) {
+    function viewJackpots(uint256 number) public view returns (uint256 size) {
         //Get the total possible mint for given jackpot
         uint256 total = ((block.number - startBlock) *
             rewardsPerBlock *
@@ -379,6 +373,13 @@ contract DegenDojo is ERC20, VRFConsumerBase, Ownable {
      */
     function getPendingAmount(address user) public view returns (uint256) {
         return AddressToPendingTrade[user]._amount;
+    }
+
+    /**
+     * Getter function for smallTrade queue length
+     */
+    function getSmallTradeQueue() public view returns (uint256) {
+        return smallTrades.length;
     }
 
     /**
