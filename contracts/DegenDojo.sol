@@ -61,6 +61,7 @@ contract DegenDojo is ERC20, VRFConsumerBase, Ownable {
         VRFConsumerBase(_vrfCoordinator, _link)
         ERC20("DegenDojo", "DOJO")
     {
+        require(ERC20(_link).decimals() == 18);
         ethUsdPriceFeed = AggregatorV3Interface(_ETHpriceFeedAddress);
         linkUsdPriceFeed = AggregatorV3Interface(_LINKpriceFeedAddress);
         fee = _fee;
@@ -105,12 +106,16 @@ contract DegenDojo is ERC20, VRFConsumerBase, Ownable {
      * Ensure that the 1% fee covers the LINK fee required per trade
      */
     function getMinimumTradeSize() public view returns (uint256) {
+        //check decimals are the same
+        require(ethUsdPriceFeed.decimals() == linkUsdPriceFeed.decimals());
         //pull prices for ethusd and linkusd from chainlink oracles
         (, int256 ethPrice, , , ) = ethUsdPriceFeed.latestRoundData();
         (, int256 linkPrice, , , ) = linkUsdPriceFeed.latestRoundData();
+        //check prices are valid
+        require(ethPrice > 0 && linkPrice > 0);
         //set minimum price, such that 1% fee covers oracle gas cost (e.g. 0.2 LINK)
-        uint256 minimumTradeSize = ((uint256(linkPrice) * fee) /
-            uint256(ethPrice)) * 100;
+        uint256 minimumTradeSize = 100 *
+            ((uint256(linkPrice) * fee) / uint256(ethPrice));
         return minimumTradeSize;
     }
 
