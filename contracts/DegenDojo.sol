@@ -8,8 +8,8 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "./DojoHouse.sol";
 
 contract DegenDojo is ERC20, VRFConsumerBase, Ownable {
-    AggregatorV3Interface public ethUsdPriceFeed;
-    AggregatorV3Interface public linkUsdPriceFeed;
+    AggregatorV3Interface public immutable ethUsdPriceFeed;
+    AggregatorV3Interface public immutable linkUsdPriceFeed;
     DojoHouse public house;
     uint256 public fee;
     bytes32 public keyhash;
@@ -41,8 +41,21 @@ contract DegenDojo is ERC20, VRFConsumerBase, Ownable {
     }
     Winner[2] public winners;
     //events
-    event RequestedRandomness(bytes32 requestId);
+    event RequestRandomness(bytes32 requestId);
     event ClaimTrade(uint256 payout, uint256 winnings, uint256 remainder);
+    event FulfillRandomness(bytes32 requestId);
+    event InitiateTrade(
+        address user,
+        uint256 amount,
+        uint256 bountyClaimed,
+        uint256 belt
+    );
+    event InitiateSmallTrade(address user, uint256 amount, uint256 belt);
+    event InitiateSetHouse(address newHouse);
+    event SetHouse(address newHouse);
+    event SetKeyHash(bytes32 newKeyHash);
+    event SetFee(uint256 newFee);
+    event SetRewardsRate(uint256 newRewardsRate);
 
     /**
      * Constructor
@@ -155,6 +168,7 @@ contract DegenDojo is ERC20, VRFConsumerBase, Ownable {
         );
         //add their trade to mapping
         bytes32 newRequest = requestRandomness(keyhash, fee);
+
         //add their pending trade to mapping of addresses (use tx.origin incase called by external router)
         AddressToPendingTrade[address(tx.origin)] = PendingTrade(
             newRequest,
@@ -162,6 +176,9 @@ contract DegenDojo is ERC20, VRFConsumerBase, Ownable {
             msg.value + bounty,
             _belt
         );
+        //save the bountyClaimed
+        uint256 bountyClaimed = bounty;
+
         //reset the bounty
         bounty = 0;
         //iterate over each of the small trades, and update the request ID
@@ -170,7 +187,8 @@ contract DegenDojo is ERC20, VRFConsumerBase, Ownable {
         }
         //delete the small trade wait list
         smallTrades = new address[](0);
-        emit RequestedRandomness(newRequest);
+        emit RequestRandomness(newRequest);
+        emit InitiateTrade(tx.origin, msg.value, bountyClaimed, _belt);
     }
 
     /**
@@ -197,6 +215,7 @@ contract DegenDojo is ERC20, VRFConsumerBase, Ownable {
             _belt
         );
         bounty += msg.value / 50;
+        emit InitiateSmallTrade(tx.origin, msg.value, _belt);
     }
 
     /**
@@ -290,40 +309,49 @@ contract DegenDojo is ERC20, VRFConsumerBase, Ownable {
     {
         //set the random number to the request
         requestToRandom[_requestId] = _randomness;
+        emit FulfillRandomness(_requestId);
     }
 
     /**
      * Initiate change in the house contract
      */
-    function initiateSetHouse(address _house) public onlyOwner {
+    function initiateSetHouse(address _house) external onlyOwner {
         //hosue can only be updated after 28,800 blocks (~1 day assuming 3s block)
         //NEED TO CHANGE CODE FOR TIME LOCK
         uint256 resetTime = block.number + 0;
         //uint256 resetTime = block.number + 28,800; <CHANGE POST TEST>
         nextHouse = newHouse(resetTime, _house);
+
+        emit InitiateSetHouse(_house);
     }
 
     /**
      * Change the house once time lock has passed
      */
-    function setHouse() public onlyOwner {
+    function setHouse() external onlyOwner {
         //require enough time has passed
         require(block.number >= nextHouse.changeBlock, "timelock not expired");
         house = DojoHouse(nextHouse.newHouse);
+
+        emit SetHouse(nextHouse.newHouse);
     }
 
     /**
      * Set the house contract after it has been created
      */
-    function setKeyhash(bytes32 _keyhash) public onlyOwner {
+    function setKeyhash(bytes32 _keyhash) external onlyOwner {
         keyhash = _keyhash;
+
+        emit SetKeyHash(_keyhash);
     }
 
     /**
      * Set the link fee paid to chainlink nodes
      */
-    function setFee(uint256 _fee) public onlyOwner {
+    function setFee(uint256 _fee) external onlyOwner {
         fee = _fee;
+
+        emit SetFee(_fee);
     }
 
     /**
@@ -345,7 +373,7 @@ contract DegenDojo is ERC20, VRFConsumerBase, Ownable {
      * Only Owner to set the rewards per block for DOJO
      * Rewards can only be decrease (to prevent potenital rug attempt)
      */
-    function setRewardsRate(uint256 rewardRate) public onlyOwner {
+    function setRewardsRate(uint256 rewardRate) external onlyOwner {
         //new rate must be lower than old
         require(
             rewardRate < rewardsPerBlock,
@@ -359,6 +387,8 @@ contract DegenDojo is ERC20, VRFConsumerBase, Ownable {
         startBlock = block.number;
         //set new rewards rate
         rewardsPerBlock = rewardRate;
+
+        emit SetRewardsRate(rewardRate);
     }
 
     /**
