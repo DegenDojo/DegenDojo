@@ -11,7 +11,7 @@ import "./DegenDojo.sol";
 contract DojoRouter {
     address public immutable factory;
     DegenDojo private immutable dojo;
-    address private immutable WETH;
+    address public immutable WETH;
     event ClaimTokenTrade(
         uint256 tokenPayout,
         uint256 winnings,
@@ -44,6 +44,10 @@ contract DojoRouter {
         if (msg.value > dojo.getMinimumTradeSize()) {
             dojo.initiateTrade{value: msg.value}(belt);
         } else {
+            require(
+                dojo.getSmallTradeQueue() < 50,
+                "Small trade queue is currently full"
+            );
             dojo.initiateSmallTrade{value: msg.value}(belt);
         }
     }
@@ -127,6 +131,10 @@ contract DojoRouter {
         if (amounts[amounts.length - 1] > dojo.getMinimumTradeSize()) {
             dojo.initiateTrade{value: amounts[amounts.length - 1]}(belt);
         } else {
+            require(
+                dojo.getSmallTradeQueue() < 50,
+                "Small trade queue is currently full"
+            );
             dojo.initiateSmallTrade{value: amounts[amounts.length - 1]}(belt);
         }
         //trade can be claimed straight from house contract

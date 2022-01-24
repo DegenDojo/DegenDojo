@@ -32,8 +32,6 @@ contract DojoHouse is ERC20("DojoLiquidity", "DLP") {
      * - accure gains/losses from house edge over time
      */
     function enter() external payable returns (uint256 what) {
-        //check to prevent flash loans from entering
-        require(msg.sender == tx.origin, "EOA only");
         //mint at 1:1 if contract is currently empty
         if (totalSupply() == 0 || address(this).balance == msg.value) {
             //issue DLP to user
@@ -61,7 +59,7 @@ contract DojoHouse is ERC20("DojoLiquidity", "DLP") {
         //burn the shares
         _burn(msg.sender, _share);
         address payable owner = payable(msg.sender);
-        owner.transfer(what);
+        owner.call{value: what}("");
     }
 
     /**
@@ -144,7 +142,7 @@ contract DojoHouse is ERC20("DojoLiquidity", "DLP") {
         bar.transfer(msg.value / 100);
         //transfer the payout
         if (payout != 0) {
-            _to.transfer(payout);
+            _to.call{value: payout}("");
         }
         //update total volume
         totalVolume += msg.value;
@@ -196,7 +194,7 @@ contract DojoHouse is ERC20("DojoLiquidity", "DLP") {
             payout = (multiplier * msg.value) / 100;
         }
         if (payout != 0) {
-            _to.transfer(payout);
+            _to.call{value: payout}("");
         }
         //update total volume
         totalVolume += msg.value;
@@ -210,7 +208,7 @@ contract DojoHouse is ERC20("DojoLiquidity", "DLP") {
         if (totalSupply() == 0) {
             return 0;
         } else {
-            return (address(this).balance * (10**18)) / totalSupply();
+            return address(this).balance / totalSupply();
         }
     }
 }
