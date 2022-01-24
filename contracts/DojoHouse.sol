@@ -9,9 +9,9 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
  */
 
 contract DojoHouse is ERC20("DojoLiquidity", "DLP") {
-    address payable private immutable bar;
+    address payable public immutable bar;
     address public immutable dojo;
-    address payable private treasury;
+    address payable public immutable treasury;
     uint256 public totalVolume;
     uint256 private tradeNonce;
 
@@ -29,14 +29,13 @@ contract DojoHouse is ERC20("DojoLiquidity", "DLP") {
     /**
      * Enter the DojoHouse
      * - receive DLP tokens based on the current WETH-Supply ratio
-     * - accure gains/losses from hosue edge over time
+     * - accure gains/losses from house edge over time
      */
-    function enter() public payable returns (uint256 what) {
+    function enter() external payable returns (uint256 what) {
         //check to prevent flash loans from entering
         require(msg.sender == tx.origin, "EOA only");
-        //initiate what
         //mint at 1:1 if contract is currently empty
-        if (totalSupply() == 0 || address(this).balance == 0) {
+        if (totalSupply() == 0 || address(this).balance == msg.value) {
             //issue DLP to user
             what = msg.value;
             _mint(msg.sender, what);
@@ -52,9 +51,9 @@ contract DojoHouse is ERC20("DojoLiquidity", "DLP") {
 
     /**
      * Leave the DojoHouse
-     * - claim back your WETH and burn your DLP
+     * - claim back your ETH and burn your DLP
      */
-    function leave(uint256 _share) public returns (uint256 what) {
+    function leave(uint256 _share) external returns (uint256 what) {
         uint256 totalShares = totalSupply();
         uint256 totalWeth = address(this).balance;
         //calcuate how much WETH is to be withdrawn
@@ -176,7 +175,7 @@ contract DojoHouse is ERC20("DojoLiquidity", "DLP") {
             multiplier = 300;
             breakpoint = 68;
         } else if (_belt == 6) {
-            multiplier = 500;
+            multiplier = 505;
             breakpoint = 81;
         }
         //send 1% fees to treasury and bar
@@ -205,9 +204,13 @@ contract DojoHouse is ERC20("DojoLiquidity", "DLP") {
     }
 
     /**
-     * Get the DLP value of Dojo:xDojo
+     * Get the DLP value of ETH:DLP
      */
-    function getValue() public view returns (uint256) {
-        return address(this).balance / totalSupply();
+    function getValue() external view returns (uint256) {
+        if (totalSupply() == 0) {
+            return 0;
+        } else {
+            return (address(this).balance * (10**18)) / totalSupply();
+        }
     }
 }
