@@ -11,7 +11,7 @@ LARGE_TRADE = Web3.toWei(0.7, "ether")
 SMALL_TRADE = Web3.toWei(0.2, "ether")
 SLIPPAGE = 5
 FAILSLIPPAGE = -50
-LINK_AMOUNT = Web3.toWei(30, "ether")
+LINK_AMOUNT = Web3.toWei(10, "ether")
 
 
 def test_trade_tokens_for_eth():
@@ -107,10 +107,10 @@ def test_trade_eth_for_tokens():
     time.sleep(180)
     # check bad dealline and amount outs
     with pytest.raises(Exception):
-        dojo_router.claimETHTrade(fail_min_out, deadline, {"from": account})
+        dojo_router.claimETHTrade(fail_min_out, deadline, dojo_token, {"from": account})
     with pytest.raises(Exception):
-        dojo_router.claimETHTrade(min_out, fail_deadline, {"from": account})
+        dojo_router.claimETHTrade(min_out, fail_deadline, dojo_token, {"from": account})
     # claim the trade
-    dojo_router.claimETHTrade(min_out, deadline, {"from": account})
+    dojo_router.claimETHTrade(min_out, deadline, dojo_token, {"from": account})
     # check link blaance was increased
     assert dojo_token.balanceOf(account) > inital_bal

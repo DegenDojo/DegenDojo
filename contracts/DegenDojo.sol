@@ -11,6 +11,7 @@ contract DegenDojo is ERC20, VRFConsumerBase, Ownable {
     AggregatorV3Interface public immutable ethUsdPriceFeed;
     AggregatorV3Interface public immutable linkUsdPriceFeed;
     DojoHouse public house;
+    bool public houseInitated;
     uint256 public fee;
     bytes32 public keyhash;
     uint256[] public jackpotPaid;
@@ -334,8 +335,7 @@ contract DegenDojo is ERC20, VRFConsumerBase, Ownable {
      */
     function initiateSetHouse(address _house) external onlyOwner {
         //hosue can only be updated after 28,800 blocks (~1 day assuming 3s block)
-        //NEED TO CHANGE CODE FOR TIME LOCK
-        uint256 resetTime = block.number + 0;
+        uint256 resetTime = block.number + 28800;
         //uint256 resetTime = block.number + 28,800; <CHANGE POST TEST>
         nextHouse = newHouse(resetTime, _house);
 
@@ -346,9 +346,15 @@ contract DegenDojo is ERC20, VRFConsumerBase, Ownable {
      * Change the house once time lock has passed
      */
     function setHouse() external onlyOwner {
-        //require enough time has passed
-        require(block.number >= nextHouse.changeBlock, "timelock not expired");
+        //require enough time has passed if house has been set
+        if (houseInitated) {
+            require(
+                block.number >= nextHouse.changeBlock,
+                "timelock not expired"
+            );
+        }
         house = DojoHouse(nextHouse.newHouse);
+        houseInitated = true;
 
         emit SetHouse(nextHouse.newHouse);
     }
