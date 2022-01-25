@@ -6,7 +6,7 @@ import time
 from web3 import Web3
 
 ENTER_AMOUNT = Web3.toWei(10 ** 4, "ether")
-LIQUIDITY_AMOUNT = Web3.toWei(30, "ether")
+LIQUIDITY_AMOUNT = Web3.toWei(15, "ether")
 LARGE_TRADE = Web3.toWei(0.7, "ether")
 SMALL_TRADE = Web3.toWei(0.2, "ether")
 SLIPPAGE = 5
@@ -23,13 +23,6 @@ def test_trade_tokens_for_eth():
     dojo_router = DojoRouter[-1]
     dojo_token = DegenDojo[-1]
 
-    account2 = get_account2()
-    dojo_token.initiateTrade(1, {"from": account2, "value": LARGE_TRADE})
-    # Wait for VRF
-    time.sleep(180)
-    tx = dojo_token.claimTrade({"from": account2})
-
-    tx = dojo_token.claimTrade({"from": account})
     # make sure enough liquidity in house
     if dojo_house.balance() < LIQUIDITY_AMOUNT:
         tx = dojo_house.enter({"from": account, "value": LIQUIDITY_AMOUNT})
@@ -103,14 +96,14 @@ def test_trade_eth_for_tokens():
         / 100
     )
     dojo_router.swapETHforTokens(
-        1, dojo_token, {"from": account, "value": LARGE_TRADE},
+        1, {"from": account, "value": LARGE_TRADE},
     )
     # check that we cannot claim trade early
     with pytest.raises(Exception):
         dojo_token.claimTrade({"from": account})
     # check that with caliming token
     with pytest.raises(Exception):
-        dojo_router.claimETHTrade(min_out, deadline, {"from": account})
+        dojo_router.claimETHTrade(min_out, deadline, dojo_token, {"from": account})
     time.sleep(180)
     # check bad dealline and amount outs
     with pytest.raises(Exception):

@@ -4,7 +4,7 @@ from brownie import DojoHouse
 import pytest
 from web3 import Web3
 
-LIQUIDITY_AMOUNT = Web3.toWei(30, "ether")
+LIQUIDITY_AMOUNT = Web3.toWei(15, "ether")
 
 
 def test_enter_leave_house():

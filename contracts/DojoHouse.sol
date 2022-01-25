@@ -208,7 +208,7 @@ contract DojoHouse is ERC20("DojoLiquidity", "DLP") {
         if (totalSupply() == 0) {
             return 0;
         } else {
-            return address(this).balance / totalSupply();
+            return (address(this).balance * (10**18)) / totalSupply();
         }
     }
 }

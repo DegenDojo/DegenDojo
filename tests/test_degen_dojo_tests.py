@@ -4,7 +4,7 @@ import pytest
 import time
 from web3 import Web3
 
-LIQUIDITY_AMOUNT = Web3.toWei(30, "ether")
+LIQUIDITY_AMOUNT = Web3.toWei(15, "ether")
 LARGE_TRADE = Web3.toWei(0.7, "ether")
 SMALL_TRADE = Web3.toWei(0.2, "ether")
 
