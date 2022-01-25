@@ -96,7 +96,7 @@ contract DojoRouter {
                 amounts[0]
             )
         );
-        _swap(amounts, path, msg.sender);
+        _swap(amounts, path, tx.origin);
         emit ClaimTokenTrade(amounts[amounts.length - 1], winnings, remainder);
     }
 

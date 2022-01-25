@@ -36,12 +36,7 @@ def test_trade_tokens_for_eth():
         tx.wait(1)
     # Trade LINK tokens for WETH
     # Approve the LINK
-    tx1 = approve_erc20(
-        LINK_AMOUNT * 2,
-        dojo_router,
-        LINK,
-        account,
-    )
+    tx1 = approve_erc20(LINK_AMOUNT * 2, dojo_router, LINK, account,)
     tx1.wait(1)
     # Get the min out
     min_out = dojo_router.getAmountOut(LINK_AMOUNT, WETH, LINK) * (100 - SLIPPAGE) / 100
@@ -62,12 +57,7 @@ def test_trade_tokens_for_eth():
         )
     # Swap declaring a spin trade white belt
     dojo_router.swapTokensForETH(
-        LINK_AMOUNT,
-        LINK,
-        1,
-        min_out,
-        deadline,
-        {"from": account},
+        LINK_AMOUNT, LINK, 1, min_out, deadline, {"from": account},
     )
     # Check can not make a regular trade
     with pytest.raises(Exception):
@@ -113,9 +103,7 @@ def test_trade_eth_for_tokens():
         / 100
     )
     dojo_router.swapETHforTokens(
-        1,
-        dojo_token,
-        {"from": account, "value": LARGE_TRADE},
+        1, dojo_token, {"from": account, "value": LARGE_TRADE},
     )
     # check that we cannot claim trade early
     with pytest.raises(Exception):

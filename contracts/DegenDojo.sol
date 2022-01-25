@@ -40,6 +40,8 @@ contract DegenDojo is ERC20, VRFConsumerBase, Ownable {
         uint256 amount;
     }
     Winner[2] public winners;
+    //whitelisted routers to interact
+    mapping(address => bool) public whitelistedRouters;
     //events
     event RequestRandomness(bytes32 requestId);
     event ClaimTrade(uint256 payout, uint256 winnings, uint256 remainder);
@@ -56,6 +58,7 @@ contract DegenDojo is ERC20, VRFConsumerBase, Ownable {
     event SetKeyHash(bytes32 newKeyHash);
     event SetFee(uint256 newFee);
     event SetRewardsRate(uint256 newRewardsRate);
+    event AddRouter(address newRouter);
 
     /**
      * Constructor
@@ -112,6 +115,15 @@ contract DegenDojo is ERC20, VRFConsumerBase, Ownable {
         jackpotOdds[7] = (2**2) * (10**18);
         //set the startBlock with current blocktime
         startBlock = block.number;
+        //whitelisted routers
+    }
+
+    /**
+     * Add a whitelisted router for trades
+     */
+    function addRouter(address newRouter) external onlyOwner {
+        whitelistedRouters[newRouter] = true;
+        emit AddRouter(newRouter);
     }
 
     /**
@@ -280,18 +292,23 @@ contract DegenDojo is ERC20, VRFConsumerBase, Ownable {
         //if spin trade
         uint256 payout = 0;
         uint256 remainder;
+        //set the receiver
+        address payable receiver = tx.origin;
+        //see if it was the router to change the receiver
+        if (whitelistedRouters[msg.sender]) {
+            receiver = msg.sender;
+        }
         if (belt <= 3) {
             (payout, remainder) = house.spinTrade{value: size}(
                 belt,
                 random,
-                //uses msg.sender here as it pays to router not origin
-                payable(address(msg.sender))
+                receiver
             );
         } else {
             (payout, remainder) = house.allOrNothingTrade{value: size}(
                 belt,
                 random,
-                payable(address(msg.sender))
+                receiver
             );
         }
         //remove the pending trade
