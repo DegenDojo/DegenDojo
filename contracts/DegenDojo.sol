@@ -293,10 +293,10 @@ contract DegenDojo is ERC20, VRFConsumerBase, Ownable {
         uint256 payout = 0;
         uint256 remainder;
         //set the receiver
-        address payable receiver = tx.origin;
+        address payable receiver = payable(tx.origin);
         //see if it was the router to change the receiver
         if (whitelistedRouters[msg.sender]) {
-            receiver = msg.sender;
+            receiver = payable(msg.sender);
         }
         if (belt <= 3) {
             (payout, remainder) = house.spinTrade{value: size}(
