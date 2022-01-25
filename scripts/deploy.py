@@ -128,15 +128,26 @@ def add_lp(dojo_token):
     print("Adding DOJO Liquidity to Uniswap")
 
 
+def add_router(dojo_token, dojo_router):
+    account = get_account()
+    print("Adding Router to whitelist")
+    tx = dojo_token.addRouter(dojo_router, {"from": account})
+    tx.wait(1)
+
+
 def main():
 
     dojo_token = deploy_degen_dojo()
+    # add liquidity to uniswap
     add_lp(dojo_token)
     fund_with_link(dojo_token)
     dojo_bar = deploy_dojo_bar(dojo_token)
     dojo_house = deploy_dojo_house(dojo_bar, dojo_token)
     dojo_router = deploy_dojo_router(dojo_token)
+    # add the router to whitelisted
+    add_router(dojo_token, dojo_router)
+
     # set house
     set_house(dojo_token, dojo_house)
-    # add liquidity to uniswap
+
     update_front_end()
