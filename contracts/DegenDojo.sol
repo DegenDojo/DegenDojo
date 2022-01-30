@@ -140,8 +140,8 @@ contract DegenDojo is ERC20, VRFConsumerBase, Ownable {
         //check prices are valid
         require(ethPrice > 0 && linkPrice > 0);
         //set minimum price, such that 1% fee covers oracle gas cost (e.g. 0.2 LINK)
-        uint256 minimumTradeSize = 100 *
-            ((uint256(linkPrice) * fee) / uint256(ethPrice));
+        uint256 minimumTradeSize = ((100 * (uint256(linkPrice) * fee)) /
+            uint256(ethPrice));
         return minimumTradeSize;
     }
 
