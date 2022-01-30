@@ -112,7 +112,7 @@ contract DojoHouse is ERC20("DojoLiquidity", "DLP") {
         }
         //rehash the random number. hashed to tradeNonce
         uint256 rehashRandom = uint256(
-            keccak256(abi.encode(_random, uint256(uint160(tx.origin))))
+            keccak256(abi.encode(_random, uint256(uint160(address(_to)))))
         );
         uint256 remainder = rehashRandom % 100;
         //first set the payout to amount if loss
@@ -179,7 +179,7 @@ contract DojoHouse is ERC20("DojoLiquidity", "DLP") {
         uint256 payout = 0;
         //rehash the random number
         uint256 rehashRandom = uint256(
-            keccak256(abi.encode(_random, uint256(uint160(tx.origin))))
+            keccak256(abi.encode(_random, uint256(uint160(address(_to)))))
         );
         //get the remainder
         uint256 remainder = rehashRandom % 100;
