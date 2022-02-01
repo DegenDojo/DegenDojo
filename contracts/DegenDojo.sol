@@ -285,8 +285,17 @@ contract DegenDojo is ERC20, VRFConsumerBase, Ownable {
         );
         uint256 size = AddressToPendingTrade[address(tx.origin)]._amount;
         uint256 belt = AddressToPendingTrade[address(tx.origin)]._level;
-        //get their random number
-        uint256 random = requestToRandom[requestID];
+
+        //rehash the random number based on address
+        uint256 random = uint256(
+            keccak256(
+                abi.encode(
+                    requestToRandom[requestID],
+                    uint256(uint160(address(tx.origin)))
+                )
+            )
+        );
+
         //spin the dojo token jackpot
         uint256 winnings = _spinJackpot(random, size, address(tx.origin));
         //claim payout from House

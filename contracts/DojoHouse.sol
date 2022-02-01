@@ -110,11 +110,8 @@ contract DojoHouse is ERC20("DojoLiquidity", "DLP") {
             multiplier3 = 800;
             multiplier4 = 1000;
         }
-        //rehash the random number. hashed to tradeNonce
-        uint256 rehashRandom = uint256(
-            keccak256(abi.encode(_random, uint256(uint160(address(tx.origin)))))
-        );
-        uint256 remainder = rehashRandom % 100;
+
+        uint256 remainder = _random % 100;
         //first set the payout to amount if loss
         uint256 payout = ((base * msg.value) / 100);
         if (remainder < breakpoint1) {
@@ -177,12 +174,9 @@ contract DojoHouse is ERC20("DojoLiquidity", "DLP") {
         bar.transfer(msg.value / 100);
         //initiate payout to a loss
         uint256 payout = 0;
-        //rehash the random number
-        uint256 rehashRandom = uint256(
-            keccak256(abi.encode(_random, uint256(uint160(address(tx.origin)))))
-        );
+
         //get the remainder
-        uint256 remainder = rehashRandom % 100;
+        uint256 remainder = _random % 100;
         if (remainder >= breakpoint) {
             //set payout to win if greater than breakpoint
             payout = (multiplier * msg.value) / 100;
