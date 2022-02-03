@@ -10,7 +10,7 @@ import "./DegenDojo.sol";
 
 contract DojoRouter {
     address public immutable factory;
-    DegenDojo private immutable dojo;
+    DegenDojo public immutable dojo;
     address public immutable WETH;
     event ClaimTokenTrade(
         uint256 tokenPayout,
