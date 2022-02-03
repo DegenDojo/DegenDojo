@@ -140,7 +140,7 @@ contract DegenDojo is ERC20, VRFConsumerBase, Ownable {
         //check prices are valid
         require(ethPrice > 0 && linkPrice > 0);
         //set minimum price, such that 1% fee covers oracle gas cost (e.g. 0.2 LINK)
-        uint256 minimumTradeSize = ((100 * (uint256(linkPrice) * fee)) /
+        uint256 minimumTradeSize = ((100 * uint256(linkPrice) * fee) /
             uint256(ethPrice));
         return minimumTradeSize;
     }
@@ -150,8 +150,7 @@ contract DegenDojo is ERC20, VRFConsumerBase, Ownable {
      * Trades cannot be greater than 1% of the house balance (w/ 10x max multiplier, 5% maximum loss from house at a time)
      */
     function getMaximumTradeSize() public view returns (uint256) {
-        //CHANGE TO 100 ON REAL LAUNCH
-        return address(house).balance / 20;
+        return address(house).balance / 100;
     }
 
     /**
@@ -285,7 +284,6 @@ contract DegenDojo is ERC20, VRFConsumerBase, Ownable {
         );
         uint256 size = AddressToPendingTrade[address(tx.origin)]._amount;
         uint256 belt = AddressToPendingTrade[address(tx.origin)]._level;
-
         //rehash the random number based on address
         uint256 random = uint256(
             keccak256(
@@ -295,7 +293,6 @@ contract DegenDojo is ERC20, VRFConsumerBase, Ownable {
                 )
             )
         );
-
         //spin the dojo token jackpot
         uint256 winnings = _spinJackpot(random, size, address(tx.origin));
         //claim payout from House
@@ -369,7 +366,7 @@ contract DegenDojo is ERC20, VRFConsumerBase, Ownable {
     }
 
     /**
-     * Set the house contract after it has been created
+     * Set the key hash for VRF Coordinator
      */
     function setKeyhash(bytes32 _keyhash) external onlyOwner {
         keyhash = _keyhash;
@@ -378,7 +375,7 @@ contract DegenDojo is ERC20, VRFConsumerBase, Ownable {
     }
 
     /**
-     * Set the link fee paid to chainlink nodes
+     * Set the Link fee to be paid to VRF
      */
     function setFee(uint256 _fee) external onlyOwner {
         fee = _fee;
@@ -424,7 +421,7 @@ contract DegenDojo is ERC20, VRFConsumerBase, Ownable {
     }
 
     /**
-     * Getter function for current pending trade levell
+     * Getter function for current pending trade level
      */
     function getPendingLevel(address user) public view returns (uint256) {
         return AddressToPendingTrade[user]._level;
