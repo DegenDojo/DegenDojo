@@ -7,7 +7,7 @@ from brownie import (
 )
 from web3 import Web3
 
-LINK_AMOUNT = Web3.toWei(10, "ether")
+LINK_AMOUNT = Web3.toWei(200, "ether")
 
 
 def get_account(index=None, id=None):

@@ -16,7 +16,7 @@ import shutil
 import time
 
 # Set initial supply to be 10M
-INITIAL_SUPPLY = Web3.toWei(3.5 * (10 ** 6), "ether")
+INITIAL_SUPPLY = Web3.toWei(2 * (10 ** 6), "ether")
 INITIAL_REWARDS_PER_BLOCK = Web3.toWei(100, "ether")
 # CHANGE BEFORE REAL DEPLOYMENT
 TREASURY = "0xe7D30D593a8eEB625EF3Ba24062112aE6Ffcdf07"
